@@ -23,6 +23,8 @@ export interface SoundDefinition {
 
 export type SessionStatus = 'running' | 'paused' | 'completed' | 'stopped';
 
+export type AlertPlayMode = 'once' | 'continuous';
+
 export type AlertState = 'WAITING' | 'REMINDER_TRIGGERED' | 'ALERT_ACTIVE' | 'SNOOZED';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -44,6 +46,7 @@ export interface SessionConfig {
   soundEnabled: boolean;
   vibrationEnabled: boolean;
   volume: number; // 0..1
+  alertMode?: AlertPlayMode;
 }
 
 export interface ClockAdjustmentNotice {
@@ -62,6 +65,7 @@ export interface ActiveSession {
   soundEnabled: boolean;
   vibrationEnabled: boolean;
   volume: number;
+  alertMode?: AlertPlayMode;
   startedAt: number;
   endAt: number;
   totalPausedMs: number;
@@ -108,6 +112,7 @@ export interface SessionPreset {
   soundEnabled: boolean;
   vibrationEnabled: boolean;
   volume: number;
+  alertMode?: AlertPlayMode;
   isDefault?: boolean;
   createdAt: number;
   updatedAt: number;
@@ -120,6 +125,7 @@ export interface AppSettings {
   defaultVibrationEnabled: boolean;
   defaultVolume: number;
   defaultSnoozeSec: number;
+  defaultAlertMode: AlertPlayMode;
   keepScreenAwake: boolean;
   notificationsEnabled: boolean;
 }

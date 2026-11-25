@@ -22,6 +22,7 @@ export const ActiveSessionPage: React.FC = () => {
   const stopSession = useIntervalBellStore((s) => s.stopSession);
   const dismissAlert = useIntervalBellStore((s) => s.dismissAlert);
   const snoozeAlert = useIntervalBellStore((s) => s.snoozeAlert);
+  const setActiveAlertMode = useIntervalBellStore((s) => s.setActiveAlertMode);
   const dismissClockNotice = useIntervalBellStore((s) => s.dismissClockNotice);
   const clearCompletedSummary = useIntervalBellStore((s) => s.clearCompletedSummary);
   const setRoute = useIntervalBellStore((s) => s.setRoute);
@@ -193,6 +194,20 @@ export const ActiveSessionPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {activeSession.soundEnabled && (
+            <button
+              type="button"
+              onClick={() =>
+                setActiveAlertMode(
+                  (activeSession.alertMode ?? 'once') === 'once' ? 'continuous' : 'once'
+                )
+              }
+              title="Switch between single chime and continuous repeat"
+              className="px-3 py-1 rounded-full bg-paper-100 dark:bg-night-900 hover:bg-paper-200/70 dark:hover:bg-night-800 text-xs text-ink-600 dark:text-paper-300 border border-paper-200/70 dark:border-night-800 transition-colors"
+            >
+              {(activeSession.alertMode ?? 'once') === 'once' ? 'Chime: Once' : 'Chime: Loop'}
+            </button>
+          )}
           <span className="font-mono text-xs text-ink-400 bg-paper-100 dark:bg-night-900 px-3 py-1 rounded-full border border-paper-200/70 dark:border-night-800 tabular-nums">
             Bell {activeSession.remindersDelivered} of {schedule.length}
           </span>

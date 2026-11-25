@@ -40,6 +40,7 @@ import {
 } from '../services/storage/settingsStorage';
 import {
   ActiveSession,
+  AlertPlayMode,
   AppRoute,
   AppSettings,
   NotificationPermissionState,
@@ -79,6 +80,7 @@ interface IntervalBellState {
   stopSession: () => Promise<void>;
   dismissAlert: () => void;
   snoozeAlert: (snoozeSec?: number) => void;
+  setActiveAlertMode: (mode: AlertPlayMode) => void;
   clearCompletedSummary: () => void;
   dismissClockNotice: () => void;
 
@@ -96,11 +98,20 @@ interface IntervalBellState {
 let lastPersistCheckpoint = 0;
 
 function fireAlertEffects(session: ActiveSession, ctx: ReminderAlertContext, notifyEnabled: boolean) {
+  const alertMode: AlertPlayMode = session.alertMode ?? 'once';
   if (session.soundEnabled) {
-    audioEngine.startLoop(session.soundId, session.volume);
+    if (alertMode === 'continuous') {
+      audioEngine.startLoop(session.soundId, session.volume);
+    } else {
+      audioEngine.playOnce(session.soundId, session.volume);
+    }
   }
   if (session.vibrationEnabled) {
-    platformAdapter.startVibrationLoop();
+    if (alertMode === 'continuous') {
+      platformAdapter.startVibrationLoop();
+    } else {
+      platformAdapter.vibrateOnce();
+    }
   }
   const soundName = getSoundById(session.soundId).name;
   const remainingSec = Math.max(0, Math.round((session.durationSec * 1000 - session.activeElapsedMs) / 1000));
@@ -110,9 +121,12 @@ function fireAlertEffects(session: ActiveSession, ctx: ReminderAlertContext, not
   if (shouldShowOSNotification) {
     void platformAdapter.showNotification({
       title: `${session.name} — ${ctx.isSnoozeReminder ? 'Snoozed Reminder' : 'Interval Reminder'}`,
-      body: `${formatDurationHMS(remainingSec)} remaining · Sound: ${soundName}. Open app to dismiss or snooze.`,
+      body:
+        alertMode === 'continuous'
+          ? `${formatDurationHMS(remainingSec)} remaining · Sound: ${soundName}. Open app to dismiss or snooze.`
+          : `${formatDurationHMS(remainingSec)} remaining · Chime ${session.remindersDelivered} (${soundName}).`,
       tag: 'interval-bell-reminder',
-      requireInteraction: true,
+      requireInteraction: alertMode === 'continuous',
     });
   }
 }
@@ -140,6 +154,7 @@ export const useIntervalBellStore = create<IntervalBellState>((set, get) => ({
     soundEnabled: DEFAULT_SETTINGS.defaultSoundEnabled,
     vibrationEnabled: DEFAULT_SETTINGS.defaultVibrationEnabled,
     volume: DEFAULT_SETTINGS.defaultVolume,
+    alertMode: DEFAULT_SETTINGS.defaultAlertMode,
   },
   notificationPermission: 'default',
 
@@ -169,13 +184,16 @@ export const useIntervalBellStore = create<IntervalBellState>((set, get) => ({
         initialRoute = 'active';
       } else {
         activeSession = restored.session;
-        if (restored.triggeredReminderIndex !== null) {
+        if (
+          restored.triggeredReminderIndex !== null &&
+          (restored.session.alertMode ?? 'once') === 'continuous'
+        ) {
           alertContext = triggerPeriodicAlert(
             alertContext,
             restored.triggeredReminderIndex,
             restored.session.activeElapsedMs
           );
-        } else if (persistedAlert) {
+        } else if (persistedAlert && (restored.session.alertMode ?? 'once') === 'continuous') {
           alertContext = persistedAlert;
         }
         saveActiveSession(activeSession);
@@ -202,6 +220,7 @@ export const useIntervalBellStore = create<IntervalBellState>((set, get) => ({
         soundEnabled: settings.defaultSoundEnabled,
         vibrationEnabled: settings.defaultVibrationEnabled,
         volume: settings.defaultVolume,
+        alertMode: settings.defaultAlertMode,
       },
     });
   },
@@ -236,6 +255,7 @@ export const useIntervalBellStore = create<IntervalBellState>((set, get) => ({
         soundEnabled: preset.soundEnabled,
         vibrationEnabled: preset.vibrationEnabled,
         volume: preset.volume,
+        alertMode: preset.alertMode ?? get().settings.defaultAlertMode,
       },
       ...(andNavigateToSetup ? {route: 'setup' as AppRoute} : {}),
     });
@@ -336,11 +356,15 @@ export const useIntervalBellStore = create<IntervalBellState>((set, get) => ({
     let shouldTriggerMedia = false;
 
     if (result.triggeredReminderIndex !== null) {
-      nextAlert = triggerPeriodicAlert(
-        alertContext,
-        result.triggeredReminderIndex,
-        result.session.activeElapsedMs
-      );
+      if ((result.session.alertMode ?? 'once') === 'continuous') {
+        nextAlert = triggerPeriodicAlert(
+          alertContext,
+          result.triggeredReminderIndex,
+          result.session.activeElapsedMs
+        );
+      } else {
+        nextAlert = createInitialAlertContext(settings.defaultSnoozeSec);
+      }
       shouldTriggerMedia = true;
     } else {
       const snoozeCheck = checkAndTriggerSnoozeAlert(alertContext, result.session.activeElapsedMs);
@@ -466,6 +490,26 @@ export const useIntervalBellStore = create<IntervalBellState>((set, get) => ({
     });
   },
 
+  setActiveAlertMode: (mode) => {
+    const {activeSession, alertContext} = get();
+    if (!activeSession) return;
+    const updatedSession: ActiveSession = {
+      ...activeSession,
+      alertMode: mode,
+    };
+    let nextAlert = alertContext;
+    if (mode === 'once' && alertContext.state !== 'WAITING') {
+      stopAllAlertEffects();
+      nextAlert = dismissAlertState(alertContext);
+      saveAlertContext(nextAlert);
+    }
+    saveActiveSession(updatedSession);
+    set({
+      activeSession: updatedSession,
+      alertContext: nextAlert,
+    });
+  },
+
   clearCompletedSummary: () => {
     set({lastCompletedRecord: null, route: 'home'});
   },
@@ -501,6 +545,7 @@ export const useIntervalBellStore = create<IntervalBellState>((set, get) => ({
       soundEnabled: validation.data.soundEnabled,
       vibrationEnabled: validation.data.vibrationEnabled,
       volume: validation.data.volume,
+      alertMode: validation.data.alertMode ?? 'once',
       isDefault: existing?.isDefault ?? false,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
@@ -552,6 +597,7 @@ export const useIntervalBellStore = create<IntervalBellState>((set, get) => ({
         soundEnabled: DEFAULT_SETTINGS.defaultSoundEnabled,
         vibrationEnabled: DEFAULT_SETTINGS.defaultVibrationEnabled,
         volume: DEFAULT_SETTINGS.defaultVolume,
+        alertMode: DEFAULT_SETTINGS.defaultAlertMode,
       },
     });
   },

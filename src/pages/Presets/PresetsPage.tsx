@@ -10,6 +10,7 @@ export const PresetsPage: React.FC = () => {
   const applyPresetToDraft = useIntervalBellStore((s) => s.applyPresetToDraft);
   const startSession = useIntervalBellStore((s) => s.startSession);
   const removePreset = useIntervalBellStore((s) => s.removePreset);
+  const defaultAlertMode = useIntervalBellStore((s) => s.settings.defaultAlertMode);
   const setRoute = useIntervalBellStore((s) => s.setRoute);
   const {showToast} = useToast();
 
@@ -89,6 +90,7 @@ export const PresetsPage: React.FC = () => {
                           soundEnabled: preset.soundEnabled,
                           vibrationEnabled: preset.vibrationEnabled,
                           volume: preset.volume,
+                          alertMode: preset.alertMode ?? defaultAlertMode,
                         });
                         if (!res.ok) setErrorMsg(res.error ?? 'Could not start session');
                       }}

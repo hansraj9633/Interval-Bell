@@ -256,6 +256,45 @@ export const SettingsPage: React.FC = () => {
 
             <div>
               <span className="text-xs font-medium text-ink-400 uppercase tracking-wider block mb-2">
+                Default Interval Sound
+              </span>
+              <div className="grid grid-cols-2 gap-2 p-1 rounded-full bg-paper-50/90 dark:bg-night-950 border border-paper-200/70 dark:border-night-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateSettings({defaultAlertMode: 'once'});
+                    updateDraftConfig({alertMode: 'once'});
+                  }}
+                  className={`py-2 rounded-full text-xs font-medium transition-all ${
+                    (settings.defaultAlertMode ?? 'once') === 'once'
+                      ? 'bg-moss-700 text-paper-50 shadow-soft'
+                      : 'text-ink-600 dark:text-paper-300 hover:text-ink-900 dark:hover:text-paper-50'
+                  }`}
+                >
+                  Play Once
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateSettings({defaultAlertMode: 'continuous'});
+                    updateDraftConfig({alertMode: 'continuous'});
+                  }}
+                  className={`py-2 rounded-full text-xs font-medium transition-all ${
+                    settings.defaultAlertMode === 'continuous'
+                      ? 'bg-moss-700 text-paper-50 shadow-soft'
+                      : 'text-ink-600 dark:text-paper-300 hover:text-ink-900 dark:hover:text-paper-50'
+                  }`}
+                >
+                  Continuous
+                </button>
+              </div>
+              <p className="text-[11px] text-ink-400 mt-1.5">
+                Choose whether interval chimes sound once or repeat until dismissed.
+              </p>
+            </div>
+
+            <div>
+              <span className="text-xs font-medium text-ink-400 uppercase tracking-wider block mb-2">
                 Default Snooze Window
               </span>
               <div className="grid grid-cols-4 gap-2">

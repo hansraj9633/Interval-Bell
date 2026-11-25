@@ -13,6 +13,7 @@ export interface PlatformAdapter {
   requestNotificationPermission(): Promise<NotificationPermissionState>;
   showNotification(payload: NotificationPayload): Promise<boolean>;
   cancelNotifications(): Promise<void>;
+  vibrateOnce(): void;
   startVibrationLoop(): void;
   stopVibration(): void;
   setWakeLock(enabled: boolean): Promise<boolean>;

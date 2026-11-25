@@ -108,6 +108,18 @@ export class WebPlatformAdapter implements PlatformAdapter {
     }
   }
 
+  public vibrateOnce(): void {
+    this.stopVibration();
+    if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') {
+      return;
+    }
+    try {
+      navigator.vibrate([260, 140, 260]);
+    } catch {
+      // ignore
+    }
+  }
+
   public startVibrationLoop(): void {
     this.stopVibration();
     if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') {

@@ -40,6 +40,24 @@ describe('Validation & Exact Reminder Scheduling', () => {
     expect(schedule).not.toContain(10800);
   });
 
+  it('validates 1-hour session with 5-minute interval produces 11 reminders and respects alertMode', () => {
+    const schedule = computeReminderSchedule(3600, 300);
+    expect(schedule).toHaveLength(11);
+    expect(schedule[0]).toBe(300);
+    expect(schedule[10]).toBe(3300);
+
+    const onceSession = createSession({...baseConfig, durationSec: 3600, intervalSec: 300, alertMode: 'once'});
+    expect(onceSession.alertMode).toBe('once');
+
+    const continuousSession = createSession({
+      ...baseConfig,
+      durationSec: 3600,
+      intervalSec: 300,
+      alertMode: 'continuous',
+    });
+    expect(continuousSession.alertMode).toBe('continuous');
+  });
+
   it('rejects interval greater than or equal to duration', () => {
     const res = validateSessionConfig({...baseConfig, durationSec: 600, intervalSec: 600});
     expect(res.valid).toBe(false);

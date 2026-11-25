@@ -42,6 +42,7 @@ export const sessionConfigSchema = z
     soundEnabled: z.boolean(),
     vibrationEnabled: z.boolean(),
     volume: z.number().min(0).max(1),
+    alertMode: z.enum(['once', 'continuous']).default('once'),
   })
   .refine((data) => data.intervalSec < data.durationSec, {
     message: 'Reminder interval must be shorter than the total session duration.',

@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultVibrationEnabled: true,
   defaultVolume: 0.8,
   defaultSnoozeSec: 300,
+  defaultAlertMode: 'once',
   keepScreenAwake: false,
   notificationsEnabled: true,
 };

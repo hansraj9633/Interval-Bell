@@ -19,12 +19,35 @@ const AppContent: React.FC = () => {
   const route = useIntervalBellStore((s) => s.route);
   const theme = useIntervalBellStore((s) => s.settings.theme);
   const lastCompletedRecord = useIntervalBellStore((s) => s.lastCompletedRecord);
+  const activeSession = useIntervalBellStore((s) => s.activeSession);
   const {showToast} = useToast();
   const prevRecordIdRef = useRef<string | null>(null);
+  const prevSessionChimeRef = useRef<{id: string; count: number} | null>(null);
 
   useEffect(() => {
     void initialize();
   }, [initialize]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (!activeSession) {
+      prevSessionChimeRef.current = null;
+      return;
+    }
+    const prev = prevSessionChimeRef.current;
+    if (
+      prev &&
+      prev.id === activeSession.id &&
+      activeSession.remindersDelivered > prev.count &&
+      (activeSession.alertMode ?? 'once') === 'once'
+    ) {
+      showToast(`Chime ${activeSession.remindersDelivered} · ${activeSession.name}`);
+    }
+    prevSessionChimeRef.current = {
+      id: activeSession.id,
+      count: activeSession.remindersDelivered,
+    };
+  }, [isInitialized, activeSession, showToast]);
 
   useEffect(() => {
     if (!isInitialized) return;

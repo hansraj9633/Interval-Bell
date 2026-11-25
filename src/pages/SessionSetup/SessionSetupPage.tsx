@@ -437,25 +437,64 @@ export const SessionSetupPage: React.FC = () => {
             </div>
 
             {draftConfig.soundEnabled && (
-              <div className="flex items-center gap-4 pt-1">
-                <span className="text-xs text-ink-400 shrink-0">Volume</span>
-                <input
-                  type="range"
-                  aria-label="Session sound volume"
-                  min={0.05}
-                  max={1}
-                  step={0.05}
-                  value={draftConfig.volume}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    updateDraftConfig({volume: v});
-                    audioEngine.setVolume(v);
-                  }}
-                  className="flex-1"
-                />
-                <span className="font-mono text-xs tabular-nums w-9 text-right">
-                  {Math.round(draftConfig.volume * 100)}%
-                </span>
+              <div className="space-y-4 pt-1">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-ink-600 dark:text-paper-300">
+                      Interval Chime Behavior
+                    </span>
+                    <span className="text-[11px] text-ink-400">
+                      {(draftConfig.alertMode ?? 'once') === 'once'
+                        ? 'Chimes once and continues'
+                        : 'Loops until dismissed'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 p-1 rounded-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-800">
+                    <button
+                      type="button"
+                      onClick={() => updateDraftConfig({alertMode: 'once'})}
+                      className={`py-2 px-3 rounded-full text-xs font-medium transition-all ${
+                        (draftConfig.alertMode ?? 'once') === 'once'
+                          ? 'bg-moss-700 text-paper-50 shadow-soft'
+                          : 'text-ink-600 dark:text-paper-300 hover:text-ink-900 dark:hover:text-paper-50'
+                      }`}
+                    >
+                      Play Once
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => updateDraftConfig({alertMode: 'continuous'})}
+                      className={`py-2 px-3 rounded-full text-xs font-medium transition-all ${
+                        draftConfig.alertMode === 'continuous'
+                          ? 'bg-moss-700 text-paper-50 shadow-soft'
+                          : 'text-ink-600 dark:text-paper-300 hover:text-ink-900 dark:hover:text-paper-50'
+                      }`}
+                    >
+                      Continuous
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <span className="text-xs text-ink-400 shrink-0">Volume</span>
+                  <input
+                    type="range"
+                    aria-label="Session sound volume"
+                    min={0.05}
+                    max={1}
+                    step={0.05}
+                    value={draftConfig.volume}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      updateDraftConfig({volume: v});
+                      audioEngine.setVolume(v);
+                    }}
+                    className="flex-1"
+                  />
+                  <span className="font-mono text-xs tabular-nums w-9 text-right">
+                    {Math.round(draftConfig.volume * 100)}%
+                  </span>
+                </div>
               </div>
             )}
           </div>

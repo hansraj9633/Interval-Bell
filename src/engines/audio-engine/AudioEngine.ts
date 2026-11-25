@@ -1,7 +1,7 @@
 import {SoundId} from '../../types';
 import {getSoundById} from './sounds';
 
-type ActiveMode = 'idle' | 'preview' | 'loop';
+type ActiveMode = 'idle' | 'preview' | 'once' | 'loop';
 
 interface ActiveVoice {
   stop: (immediate?: boolean) => void;
@@ -116,6 +116,28 @@ class AudioEngine {
         this.notify();
       }
     }, Math.min(def.loopIntervalMs, 2800));
+  }
+
+  public playOnce(soundId: SoundId, volume: number): void {
+    this.stop();
+    this.setVolume(volume);
+    const ctx = this.ensureContext();
+    if (!ctx) return;
+
+    const gen = this.generation;
+    this.mode = 'once';
+    this.currentSoundId = soundId;
+    this.notify();
+
+    this.triggerSoundPhrase(ctx, soundId, gen);
+    const def = getSoundById(soundId);
+    this.previewEndTimer = setTimeout(() => {
+      if (this.generation === gen && this.mode === 'once') {
+        this.mode = 'idle';
+        this.currentSoundId = null;
+        this.notify();
+      }
+    }, def.loopIntervalMs);
   }
 
   public startLoop(soundId: SoundId, volume: number): void {

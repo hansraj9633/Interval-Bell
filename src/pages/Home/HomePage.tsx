@@ -14,6 +14,7 @@ export const HomePage: React.FC = () => {
   const presets = useIntervalBellStore((s) => s.presets);
   const history = useIntervalBellStore((s) => s.history);
   const startSession = useIntervalBellStore((s) => s.startSession);
+  const defaultAlertMode = useIntervalBellStore((s) => s.settings.defaultAlertMode);
   const pauseSession = useIntervalBellStore((s) => s.pauseSession);
   const resumeSession = useIntervalBellStore((s) => s.resumeSession);
 
@@ -186,6 +187,7 @@ export const HomePage: React.FC = () => {
                         soundEnabled: preset.soundEnabled,
                         vibrationEnabled: preset.vibrationEnabled,
                         volume: preset.volume,
+                        alertMode: preset.alertMode ?? defaultAlertMode,
                       });
                     }}
                     title={`Begin ${preset.name}`}

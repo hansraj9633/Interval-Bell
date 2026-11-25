@@ -33,6 +33,7 @@ export function createSession(
     soundEnabled: config.soundEnabled,
     vibrationEnabled: config.vibrationEnabled,
     volume: config.volume,
+    alertMode: config.alertMode ?? 'once',
     startedAt: nowWall,
     endAt: nowWall + durationMs,
     totalPausedMs: 0,
