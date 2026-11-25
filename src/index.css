@@ -1,0 +1,136 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-brand: "Cormorant Garamond", Georgia, serif;
+  --font-serif: "Newsreader", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-paper-50: #FAF8F5;
+  --color-paper-100: #F3EFEA;
+  --color-paper-200: #E8E2D9;
+  --color-paper-300: #D6CEC2;
+
+  --color-ink-900: #1C1B19;
+  --color-ink-600: #57534E;
+  --color-ink-400: #8C857B;
+
+  --color-moss-700: #2A4B3C;
+  --color-moss-800: #1F3A2E;
+  --color-moss-100: #E4ECE8;
+
+  --color-terracotta-500: #C46D4E;
+  --color-terracotta-100: #F7EAE5;
+
+  --color-night-950: #141312;
+  --color-night-900: #1C1B19;
+  --color-night-800: #272522;
+  --color-night-700: #35322E;
+
+  --shadow-soft: 0 4px 24px -4px rgba(28, 27, 25, 0.04), 0 1px 2px rgba(28, 27, 25, 0.03);
+  --shadow-lifted: 0 12px 32px -8px rgba(28, 27, 25, 0.08), 0 2px 6px rgba(28, 27, 25, 0.04);
+  --shadow-pill: 0 8px 30px rgba(28, 27, 25, 0.06);
+}
+
+/* Subtle organic paper grain overlay for tactile warmth */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Custom range slider for tactile feel */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(140, 133, 123, 0.25);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: #2A4B3C;
+  margin-top: -6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+.dark input[type="range"]::-webkit-slider-thumb {
+  background: #6FA38B;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+/* Smooth view transitions */
+.view-section {
+  animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Gentle breathing ring animation for active timer */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.65;
+  }
+}
+.animate-breathe {
+  animation: breathe 6s ease-in-out infinite;
+}
+
+/* Ripple wave when bell rings */
+@keyframes bellRipple {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+.ripple-active {
+  animation: bellRipple 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

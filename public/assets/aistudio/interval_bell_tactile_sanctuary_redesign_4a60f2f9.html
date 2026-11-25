@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interval Bell — Pause. Refocus. Continue.</title>
+  
+  <!-- Editorial & Humanist Typography Pairing -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Tone.js for Synthesized Acoustic Singing Bowls & Chimes -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            brand: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            serif: ['"Newsreader"', 'Georgia', 'serif'],
+            sans: ['"Plus Jakarta Sans"', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            paper: {
+              50: '#FAF8F5',   /* Warm Alabaster Canvas */
+              100: '#F3EFEA',  /* Tactile Stone Card */
+              200: '#E8E2D9',  /* Subtle Hairline / Pill */
+              300: '#D6CEC2',
+            },
+            ink: {
+              900: '#1C1B19',  /* Warm Charcoal Ink */
+              600: '#57534E',  /* Muted Umber */
+              400: '#8C857B',  /* Soft Taupe */
+            },
+            moss: {
+              700: '#2A4B3C',  /* Grounded Botanical Primary */
+              800: '#1F3A2E',
+              100: '#E4ECE8',
+            },
+            terracotta: {
+              500: '#C46D4E',  /* Warm Acoustic Accent */
+              100: '#F7EAE5',
+            },
+            night: {
+              950: '#141312',  /* Deep Warm Obsidian */
+              900: '#1C1B19',  /* Elevated Card */
+              800: '#272522',  /* Interactive Surface */
+            }
+          },
+          boxShadow: {
+            'soft': '0 4px 24px -4px rgba(28, 27, 25, 0.04), 0 1px 2px rgba(28, 27, 25, 0.03)',
+            'lifted': '0 12px 32px -8px rgba(28, 27, 25, 0.08), 0 2px 6px rgba(28, 27, 25, 0.04)',
+            'pill': '0 8px 30px rgba(28, 27, 25, 0.06)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Subtle organic paper grain overlay for tactile warmth */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.028;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Custom range slider for tactile feel */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(140, 133, 123, 0.25);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #2A4B3C;
+      margin-top: -6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.15s ease;
+    }
+    .dark input[type="range"]::-webkit-slider-thumb {
+      background: #6FA38B;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    /* Smooth view transitions */
+    .view-section {
+      animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Gentle breathing ring animation for active timer */
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.35; }
+      50% { transform: scale(1.06); opacity: 0.65; }
+    }
+    .animate-breathe {
+      animation: breathe 6s ease-in-out infinite;
+    }
+
+    /* Ripple wave when bell rings */
+    @keyframes bellRipple {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      100% { transform: scale(1.45); opacity: 0; }
+    }
+    .ripple-active {
+      animation: bellRipple 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Tabular numbers for zero jitter */
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Hide scrollbar for mobile pill bar */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-paper-50 text-ink-900 dark:bg-night-950 dark:text-paper-100 font-sans antialiased selection:bg-moss-700 selection:text-white transition-colors duration-300 min-h-screen flex flex-col">
+
+  <!-- Toast Notification (Replaces generic alerts) -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-ink-900 dark:bg-paper-100 text-paper-50 dark:text-ink-900 px-5 py-3 rounded-full shadow-lifted flex items-center gap-3 text-sm font-medium">
+      <span id="toast-icon" class="w-2 h-2 rounded-full bg-terracotta-500"></span>
+      <span id="toast-msg">Notification</span>
+    </div>
+  </div>
+
+  <!-- Top Sanctuary Navigation -->
+  <header id="main-header" class="sticky top-0 z-30 backdrop-blur-md bg-paper-50/85 dark:bg-night-950/85 border-b border-paper-200/70 dark:border-night-800/80 transition-colors">
+    <div class="max-w-5xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between gap-6">
+      
+      <!-- Bespoke Architectural Brand Identity -->
+      <button type="button" onclick="switchTab('home')" class="flex items-center gap-3.5 text-left group focus:outline-none shrink-0">
+        <!-- Custom Singing Bowl & Acoustic Resonance Emblem -->
+        <div class="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-moss-700 to-moss-800 dark:from-moss-800 dark:to-night-900 text-paper-50 flex items-center justify-center shadow-soft border border-moss-700/20 dark:border-paper-100/10 group-hover:scale-[1.03] transition-all duration-300 shrink-0">
+          <div class="absolute inset-[2px] rounded-[14px] border border-paper-50/15 pointer-events-none"></div>
+          
+          <svg class="w-5 h-5" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Acoustic Sound Wave Arcs -->
+            <path d="M9.5 7.5C12.2 5.4 15.8 5.4 18.5 7.5" stroke="#E4ECE8" stroke-width="1.3" stroke-linecap="round" class="opacity-70 group-hover:opacity-100 transition-opacity"/>
+            <path d="M11.5 10C13.1 8.8 14.9 8.8 16.5 10" stroke="#C46D4E" stroke-width="1.5" stroke-linecap="round"/>
+            
+            <!-- Sculpted Tibetan Singing Bowl Silhouette -->
+            <path d="M5.5 13.5H22.5C22.5 18.4 18.7 21.8 14 21.8C9.3 21.8 5.5 18.4 5.5 13.5Z" fill="#FAF8F5" fill-opacity="0.12" stroke="#FAF8F5" stroke-width="1.5" stroke-linejoin="round"/>
+            
+            <!-- Resting Wooden Striker / Mallet Line -->
+            <path d="M18.5 11.2L23.5 8.5" stroke="#C46D4E" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="18.2" cy="11.4" r="1.3" fill="#FAF8F5"/>
+            
+            <!-- Grounded Cushion Base -->
+            <path d="M10.5 23.5H17.5" stroke="#FAF8F5" stroke-width="1.5" stroke-linecap="round" class="opacity-80"/>
+          </svg>
+        </div>
+
+        <!-- Editorial Wordmark & Single-Line Tagline -->
+        <div class="flex flex-col justify-center">
+          <span class="font-brand text-[24px] font-semibold tracking-[-0.015em] text-ink-900 dark:text-paper-50 leading-none whitespace-nowrap">
+            Interval <span class="italic font-medium text-moss-700 dark:text-emerald-400">Bell</span>
+          </span>
+          <span class="text-[9px] uppercase tracking-[0.18em] text-ink-400 dark:text-paper-300/60 font-medium mt-1.5 whitespace-nowrap">
+            Pause &middot; Refocus &middot; Continue
+          </span>
+        </div>
+      </button>
+
+      <!-- Floating Pill Navigation (Desktop) -->
+      <nav class="hidden md:flex items-center bg-paper-100/90 dark:bg-night-900 p-1.5 rounded-full border border-paper-200/80 dark:border-night-800 shadow-soft shrink-0">
+        <button type="button" onclick="switchTab('home')" data-tab="home" class="nav-pill px-4 py-1.5 rounded-full text-xs lg:text-sm font-medium whitespace-nowrap transition-all">Sanctuary</button>
+        <button type="button" onclick="switchTab('configure')" data-tab="configure" class="nav-pill px-4 py-1.5 rounded-full text-xs lg:text-sm font-medium whitespace-nowrap transition-all">New Session</button>
+        <button type="button" onclick="switchTab('presets')" data-tab="presets" class="nav-pill px-4 py-1.5 rounded-full text-xs lg:text-sm font-medium whitespace-nowrap transition-all">Rituals</button>
+        <button type="button" onclick="switchTab('sounds')" data-tab="sounds" class="nav-pill px-4 py-1.5 rounded-full text-xs lg:text-sm font-medium whitespace-nowrap transition-all">Acoustics</button>
+        <button type="button" onclick="switchTab('history')" data-tab="history" class="nav-pill px-4 py-1.5 rounded-full text-xs lg:text-sm font-medium whitespace-nowrap transition-all">Journal</button>
+      </nav>
+
+      <!-- Right Actions: Theme & Settings -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button type="button" onclick="toggleTheme()" aria-label="Toggle theme" class="p-2.5 rounded-full text-ink-600 dark:text-paper-300 hover:bg-paper-100 dark:hover:bg-night-800 transition-colors" title="Switch Light / Warm Night">
+          <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+          <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        </button>
+        <button type="button" onclick="switchTab('settings')" data-tab="settings" class="nav-icon-btn p-2.5 rounded-full text-ink-600 dark:text-paper-300 hover:bg-paper-100 dark:hover:bg-night-800 transition-colors" title="Preferences">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Scrollable Pill Bar -->
+    <div class="md:hidden flex items-center gap-1.5 overflow-x-auto px-4 pb-3 no-scrollbar">
+      <button type="button" onclick="switchTab('home')" data-tab="home" class="nav-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap">Sanctuary</button>
+      <button type="button" onclick="switchTab('configure')" data-tab="configure" class="nav-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap">New Session</button>
+      <button type="button" onclick="switchTab('presets')" data-tab="presets" class="nav-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap">Rituals</button>
+      <button type="button" onclick="switchTab('sounds')" data-tab="sounds" class="nav-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap">Acoustics</button>
+      <button type="button" onclick="switchTab('history')" data-tab="history" class="nav-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap">Journal</button>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-8 sm:py-12">
+
+    <!-- =====================================================================
+         1. HOME / SANCTUARY VIEW
+    ====================================================================== -->
+    <section id="view-home" class="view-section space-y-12">
+      <!-- Editorial Greeting & Primary CTA -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="space-y-3">
+          <p class="text-xs uppercase tracking-[0.18em] text-ink-400 font-medium" id="greeting-time">Afternoon Practice</p>
+          <h1 class="font-serif text-4xl sm:text-5xl font-normal tracking-tight text-ink-900 dark:text-paper-50 leading-[1.12]">
+            Focus in rhythm<span class="text-terracotta-500">.</span>
+          </h1>
+          <p class="text-ink-600 dark:text-paper-300 text-sm sm:text-base max-w-lg leading-relaxed">
+            Gentle acoustic anchors to bring your wandering attention back to the present moment. Shape a custom sitting or begin a curated ritual below.
+          </p>
+        </div>
+
+        <button type="button" onclick="switchTab('configure')" class="self-start md:self-auto bg-moss-700 hover:bg-moss-800 text-paper-50 px-6 py-3.5 rounded-full font-medium text-sm shadow-lifted hover:shadow-xl transition-all flex items-center gap-2.5 group shrink-0">
+          <svg class="w-4 h-4 transition-transform group-hover:rotate-90" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Begin Custom Session</span>
+        </button>
+      </div>
+
+      <!-- Quiet Reflection Metrics -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        <div class="bg-paper-100/70 dark:bg-night-900/90 rounded-3xl p-6 shadow-soft border border-paper-200/50 dark:border-night-800">
+          <span class="text-xs font-medium text-ink-400 uppercase tracking-wider">Today's Presence</span>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span id="stat-today" class="font-serif text-4xl font-normal tabular-nums">0m</span>
+            <span class="text-xs text-moss-700 dark:text-emerald-400 font-medium">mindful</span>
+          </div>
+        </div>
+
+        <div class="bg-paper-100/70 dark:bg-night-900/90 rounded-3xl p-6 shadow-soft border border-paper-200/50 dark:border-night-800">
+          <span class="text-xs font-medium text-ink-400 uppercase tracking-wider">Completed Sittings</span>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span id="stat-sessions" class="font-serif text-4xl font-normal tabular-nums">0</span>
+            <span class="text-xs text-ink-400">cycles</span>
+          </div>
+        </div>
+
+        <div class="bg-paper-100/70 dark:bg-night-900/90 rounded-3xl p-6 shadow-soft border border-paper-200/50 dark:border-night-800">
+          <span class="text-xs font-medium text-ink-400 uppercase tracking-wider">Cumulative Depth</span>
+          <div class="mt-3 flex items-baseline gap-2">
+            <span id="stat-total" class="font-serif text-4xl font-normal tabular-nums">0m</span>
+            <span class="text-xs text-ink-400">all time</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-Column Rituals & Recent Journal -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-2">
+        
+        <!-- Left 7 Cols: Curated Rituals -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="flex items-center justify-between px-1">
+            <h2 class="font-serif text-2xl font-normal">Curated Rituals</h2>
+            <button type="button" onclick="switchTab('presets')" class="text-xs font-medium text-moss-700 dark:text-emerald-400 hover:underline">Manage all →</button>
+          </div>
+
+          <div id="home-presets-list" class="space-y-3">
+            <!-- Rendered dynamically by JS -->
+          </div>
+        </div>
+
+        <!-- Right 5 Cols: Recent Reflections -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="flex items-center justify-between px-1">
+            <h2 class="font-serif text-2xl font-normal">Recent Reflections</h2>
+            <button type="button" onclick="switchTab('history')" class="text-xs font-medium text-ink-400 hover:text-ink-900 dark:hover:text-paper-100">Journal →</button>
+          </div>
+
+          <div id="home-recent-list" class="bg-paper-100/60 dark:bg-night-900/70 rounded-3xl p-6 border border-paper-200/60 dark:border-night-800 min-h-[260px] flex flex-col justify-center">
+            <!-- Empty state or list populated via JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         2. CONFIGURE SESSION VIEW
+    ====================================================================== -->
+    <section id="view-configure" class="view-section hidden space-y-8">
+      <div>
+        <p class="text-xs uppercase tracking-[0.18em] text-ink-400 font-medium">Intentional Design</p>
+        <h1 class="font-serif text-3xl sm:text-4xl font-normal mt-1">Shape Your Session</h1>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left Controls (7 Cols) -->
+        <div class="lg:col-span-7 space-y-6">
+          
+          <!-- Intention Input -->
+          <div class="bg-paper-100/80 dark:bg-night-900 rounded-3xl p-6 sm:p-7 shadow-soft space-y-3">
+            <label for="session-name" class="block text-sm font-medium text-ink-900 dark:text-paper-100">Intention or Focus Anchor <span class="text-ink-400 font-normal">(Optional)</span></label>
+            <input type="text" id="session-name" placeholder="e.g., Deep Writing, Breath Awareness, Reading..." 
+              class="w-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-800 rounded-2xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-moss-700/30 transition-all placeholder:text-ink-400/70" />
+          </div>
+
+          <!-- Total Duration -->
+          <div class="bg-paper-100/80 dark:bg-night-900 rounded-3xl p-6 sm:p-7 shadow-soft space-y-5">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium">Total Duration</span>
+              <span id="display-total-duration" class="font-mono text-sm text-moss-700 dark:text-emerald-400 font-medium bg-moss-100/70 dark:bg-moss-800/40 px-3 py-1 rounded-full">01:00:00</span>
+            </div>
+
+            <!-- Quick Duration Chips -->
+            <div class="flex flex-wrap gap-2" id="duration-chips">
+              <button type="button" data-mins="15" onclick="setDurationPreset(15)" class="dur-chip px-4 py-2 rounded-full text-xs font-medium bg-paper-50 dark:bg-night-800 hover:bg-paper-200 transition-colors">15m</button>
+              <button type="button" data-mins="25" onclick="setDurationPreset(25)" class="dur-chip px-4 py-2 rounded-full text-xs font-medium bg-paper-50 dark:bg-night-800 hover:bg-paper-200 transition-colors">25m</button>
+              <button type="button" data-mins="45" onclick="setDurationPreset(45)" class="dur-chip px-4 py-2 rounded-full text-xs font-medium bg-paper-50 dark:bg-night-800 hover:bg-paper-200 transition-colors">45m</button>
+              <button type="button" data-mins="60" onclick="setDurationPreset(60)" class="dur-chip px-4 py-2 rounded-full text-xs font-medium bg-moss-700 text-white shadow-soft">1h</button>
+              <button type="button" data-mins="120" onclick="setDurationPreset(120)" class="dur-chip px-4 py-2 rounded-full text-xs font-medium bg-paper-50 dark:bg-night-800 hover:bg-paper-200 transition-colors">2h</button>
+            </div>
+
+            <!-- Fine Tune Inputs -->
+            <div class="grid grid-cols-3 gap-3 pt-1">
+              <div>
+                <label for="dur-h" class="text-[11px] uppercase tracking-wider text-ink-400 block mb-1.5">Hours</label>
+                <input type="number" id="dur-h" min="0" max="12" value="1" oninput="updateConfigPreview()" class="w-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-800 rounded-2xl px-3.5 py-2.5 font-mono text-sm tabular-nums focus:outline-none focus:border-moss-700" />
+              </div>
+              <div>
+                <label for="dur-m" class="text-[11px] uppercase tracking-wider text-ink-400 block mb-1.5">Minutes</label>
+                <input type="number" id="dur-m" min="0" max="59" value="0" oninput="updateConfigPreview()" class="w-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-800 rounded-2xl px-3.5 py-2.5 font-mono text-sm tabular-nums focus:outline-none focus:border-moss-700" />
+              </div>
+              <div>
+                <label for="dur-s" class="text-[11px] uppercase tracking-wider text-ink-400 block mb-1.5">Seconds</label>
+                <input type="number" id="dur-s" min="0" max="59" value="0" oninput="updateConfigPreview()" class="w-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-800 rounded-2xl px-3.5 py-2.5 font-mono text-sm tabular-nums focus:outline-none focus:border-moss-700" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Mindful Bell Cadence -->
+          <div class="bg-paper-100/80 dark:bg-night-900 rounded-3xl p-6 sm:p-7 shadow-soft space-y-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-sm font-medium block">Gentle Bell Cadence</span>
+                <span class="text-xs text-ink-400">Periodic chime to check posture & presence</span>
+              </div>
+              <span id="display-interval-duration" class="font-mono text-sm text-terracotta-500 font-medium bg-terracotta-100/80 dark:bg-terracotta-500/15 px-3 py-1 rounded-full">Every 15:00</span>
+            </div>
+
+            <div class="flex flex-wrap gap-2" id="interval-chips">
+              <button type="button" data-mins="5" onclick="setIntervalPreset(5)" class="int-chip px-4 py-2 rounded-full text-xs font-medium bg-paper-50 dark:bg-night-800 hover:bg-paper-200 transition-colors">5m</button>
+              <button type="button" data-mins="10" onclick="setIntervalPreset(10)" class="int-chip px-4 py-2 rounded-full text-xs font-medium bg-paper-50 dark:bg-night-800 hover:bg-paper-200 transition-colors">10m</button>
+              <button type="button" data-mins="15" onclick="setIntervalPreset(15)" class="int-chip px-4 py-2 rounded-full text-xs font-medium bg-moss-700 text-white shadow-soft">15m</button>
+              <button type="button" data-mins="20" onclick="setIntervalPreset(20)" class="int-chip px-4 py-2 rounded-full text-xs font-medium bg-paper-50 dark:bg-night-800 hover:bg-paper-200 transition-colors">20m</button>
+              <button type="button" data-mins="30" onclick="setIntervalPreset(30)" class="int-chip px-4 py-2 rounded-full text-xs font-medium bg-paper-50 dark:bg-night-800 hover:bg-paper-200 transition-colors">30m</button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 pt-1">
+              <div>
+                <label for="int-h" class="text-[11px] uppercase tracking-wider text-ink-400 block mb-1.5">Hours</label>
+                <input type="number" id="int-h" min="0" max="12" value="0" oninput="updateConfigPreview()" class="w-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-800 rounded-2xl px-3.5 py-2.5 font-mono text-sm tabular-nums focus:outline-none focus:border-moss-700" />
+              </div>
+              <div>
+                <label for="int-m" class="text-[11px] uppercase tracking-wider text-ink-400 block mb-1.5">Minutes</label>
+                <input type="number" id="int-m" min="0" max="59" value="15" oninput="updateConfigPreview()" class="w-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-800 rounded-2xl px-3.5 py-2.5 font-mono text-sm tabular-nums focus:outline-none focus:border-moss-700" />
+              </div>
+              <div>
+                <label for="int-s" class="text-[11px] uppercase tracking-wider text-ink-400 block mb-1.5">Seconds</label>
+                <input type="number" id="int-s" min="0" max="59" value="0" oninput="updateConfigPreview()" class="w-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-800 rounded-2xl px-3.5 py-2.5 font-mono text-sm tabular-nums focus:outline-none focus:border-moss-700" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Acoustic Selection -->
+          <div class="bg-paper-100/80 dark:bg-night-900 rounded-3xl p-6 sm:p-7 shadow-soft space-y-5">
+            <span class="text-sm font-medium block">Acoustic Resonance</span>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <select id="config-sound-select" onchange="updateConfigPreview()" class="flex-1 bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-800 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-moss-700">
+                <!-- Populated by JS -->
+              </select>
+              <button type="button" onclick="playSelectedConfigSound()" class="px-5 py-3 rounded-2xl bg-paper-50 dark:bg-night-800 border border-paper-200 dark:border-night-800 hover:bg-paper-200/70 text-sm font-medium flex items-center justify-center gap-2 transition-colors">
+                <svg class="w-4 h-4 text-moss-700 dark:text-emerald-400" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Preview Bell</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Sticky Visual Rhythm Arc & Action (5 Cols) -->
+        <div class="lg:col-span-5 lg:sticky lg:top-28 bg-paper-100 dark:bg-night-900 rounded-3xl p-6 sm:p-8 shadow-lifted border border-paper-200/70 dark:border-night-800 space-y-6">
+          <div>
+            <h2 class="font-serif text-2xl font-normal">Rhythm Arc</h2>
+            <p id="preview-summary-text" class="text-xs text-ink-400 mt-1">3 gentle reminders before completion</p>
+          </div>
+
+          <!-- Visual Timeline Nodes -->
+          <div id="rhythm-timeline-nodes" class="space-y-3 max-h-64 overflow-y-auto pr-1">
+            <!-- Dynamically rendered timeline -->
+          </div>
+
+          <div class="pt-2 space-y-3">
+            <button type="button" onclick="startConfiguredSession()" class="w-full bg-moss-700 hover:bg-moss-800 text-paper-50 py-4 rounded-full font-medium text-sm shadow-lifted transition-all flex items-center justify-center gap-2.5">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Enter Focus Sanctuary</span>
+            </button>
+            <button type="button" onclick="saveCurrentAsPreset()" class="w-full bg-paper-50 dark:bg-night-800 hover:bg-paper-200/70 text-ink-900 dark:text-paper-100 py-3.5 rounded-full font-medium text-xs border border-paper-200 dark:border-night-700 transition-colors">
+              Save as Ritual Preset
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         3. SAVED PRESETS (RITUALS) VIEW
+    ====================================================================== -->
+    <section id="view-presets" class="view-section hidden space-y-8">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-ink-400 font-medium">Repeatable Cadences</p>
+          <h1 class="font-serif text-3xl sm:text-4xl font-normal mt-1">Saved Rituals</h1>
+        </div>
+        <button type="button" onclick="switchTab('configure')" class="self-start sm:self-auto bg-moss-700 hover:bg-moss-800 text-paper-50 px-5 py-2.5 rounded-full text-sm font-medium shadow-soft transition-all">
+          + New Ritual
+        </button>
+      </div>
+
+      <div id="presets-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         4. SOUND LIBRARY (ACOUSTICS) VIEW
+    ====================================================================== -->
+    <section id="view-sounds" class="view-section hidden space-y-8">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-ink-400 font-medium">Psychoacoustic Synthesis</p>
+          <h1 class="font-serif text-3xl sm:text-4xl font-normal mt-1">Acoustic Instruments</h1>
+        </div>
+        
+        <!-- Tactile Volume Control -->
+        <div class="bg-paper-100 dark:bg-night-900 px-5 py-3 rounded-full flex items-center gap-4 border border-paper-200/70 dark:border-night-800">
+          <svg class="w-4 h-4 text-ink-600 dark:text-paper-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+          <input type="range" id="global-volume-slider" min="10" max="100" value="80" oninput="updateVolume(this.value)" class="w-28 sm:w-36" />
+          <span id="global-volume-label" class="font-mono text-xs tabular-nums w-9 text-right">80%</span>
+        </div>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex flex-wrap gap-2" id="sound-category-filters">
+        <button type="button" data-cat="All" onclick="filterSounds('All')" class="sound-cat-btn px-4 py-1.5 rounded-full text-xs font-medium bg-ink-900 text-paper-50 dark:bg-paper-100 dark:text-ink-900">All Instruments</button>
+        <button type="button" data-cat="Bell" onclick="filterSounds('Bell')" class="sound-cat-btn px-4 py-1.5 rounded-full text-xs font-medium bg-paper-100 dark:bg-night-900 text-ink-600 dark:text-paper-300">Singing Bowls & Bells</button>
+        <button type="button" data-cat="Harmonic" onclick="filterSounds('Harmonic')" class="sound-cat-btn px-4 py-1.5 rounded-full text-xs font-medium bg-paper-100 dark:bg-night-900 text-ink-600 dark:text-paper-300">Harmonic Chimes</button>
+        <button type="button" data-cat="Minimal" onclick="filterSounds('Minimal')" class="sound-cat-btn px-4 py-1.5 rounded-full text-xs font-medium bg-paper-100 dark:bg-night-900 text-ink-600 dark:text-paper-300">Minimal Pulses</button>
+      </div>
+
+      <div id="sounds-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Populated dynamically -->
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         5. HISTORY & STATISTICS (JOURNAL) VIEW
+    ====================================================================== -->
+    <section id="view-history" class="view-section hidden space-y-8">
+      <div>
+        <p class="text-xs uppercase tracking-[0.18em] text-ink-400 font-medium">Mindful Continuity</p>
+        <h1 class="font-serif text-3xl sm:text-4xl font-normal mt-1">Practice Journal</h1>
+      </div>
+
+      <!-- Weekly Rhythm Visualizer -->
+      <div class="bg-paper-100/80 dark:bg-night-900 rounded-3xl p-6 sm:p-8 shadow-soft border border-paper-200/60 dark:border-night-800 space-y-6">
+        <div class="flex items-center justify-between">
+          <h2 class="font-serif text-xl font-normal">7-Day Resonance</h2>
+          <span class="text-xs text-ink-400">Minutes of deep presence</span>
+        </div>
+        
+        <div id="weekly-bars" class="grid grid-cols-7 gap-3 sm:gap-6 h-40 items-end pt-6">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Session Log -->
+      <div id="history-log-container" class="space-y-3">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         6. SETTINGS VIEW
+    ====================================================================== -->
+    <section id="view-settings" class="view-section hidden space-y-8">
+      <div>
+        <p class="text-xs uppercase tracking-[0.18em] text-ink-400 font-medium">Environment</p>
+        <h1 class="font-serif text-3xl sm:text-4xl font-normal mt-1">Preferences</h1>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-paper-100/80 dark:bg-night-900 rounded-3xl p-6 sm:p-7 shadow-soft space-y-6">
+          <h2 class="font-serif text-xl font-normal">Atmosphere & Defaults</h2>
+          
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-sm font-medium block">Paper Theme</span>
+              <span class="text-xs text-ink-400">Warm alabaster or low-glare obsidian</span>
+            </div>
+            <button type="button" onclick="toggleTheme()" class="px-4 py-2 rounded-full bg-paper-50 dark:bg-night-800 border border-paper-200 dark:border-night-700 text-xs font-medium">
+              Switch Theme
+            </button>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-sm font-medium block">Haptic Pulse (Mobile)</span>
+              <span class="text-xs text-ink-400">Gentle vibration alongside acoustic chime</span>
+            </div>
+            <input type="checkbox" id="setting-vibrate" checked class="w-5 h-5 accent-moss-700 rounded cursor-pointer" />
+          </div>
+        </div>
+
+        <div class="bg-paper-100/80 dark:bg-night-900 rounded-3xl p-6 sm:p-7 shadow-soft space-y-6">
+          <h2 class="font-serif text-xl font-normal">Local Sanctuary Privacy</h2>
+          <p class="text-xs text-ink-600 dark:text-paper-300 leading-relaxed">
+            Your practice stays strictly on this device. No accounts, no cloud telemetry, no external tracking.
+          </p>
+          <div class="pt-2">
+            <button type="button" id="btn-clear-history" onclick="clearHistoryData()" class="px-4 py-2.5 rounded-full border border-terracotta-500/40 text-terracotta-500 hover:bg-terracotta-500/10 text-xs font-medium transition-colors">
+              Clear Practice Journal
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================
+       7. IMMERSIVE ACTIVE FOCUS SANCTUARY (FULLSCREEN OVERLAY)
+  ====================================================================== -->
+  <div id="active-sanctuary" class="fixed inset-0 z-40 bg-paper-50 dark:bg-night-950 hidden flex-col items-center justify-between p-6 sm:p-12 transition-opacity duration-500">
+    
+    <!-- Top Minimal Status -->
+    <div class="w-full max-w-2xl flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <span class="w-2 h-2 rounded-full bg-moss-700 dark:bg-emerald-400 animate-pulse"></span>
+        <span id="active-session-title" class="text-sm font-medium text-ink-600 dark:text-paper-300">Mindful Sitting</span>
+      </div>
+      <span id="active-bell-counter" class="font-mono text-xs text-ink-400 bg-paper-100 dark:bg-night-900 px-3 py-1 rounded-full">
+        Bell 0 of 3
+      </span>
+    </div>
+
+    <!-- Center Organic Breathing Halo & Timer -->
+    <div class="relative flex items-center justify-center my-auto">
+      <!-- Outer Breathing Aura -->
+      <div class="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full bg-moss-700/10 dark:bg-emerald-500/10 animate-breathe pointer-events-none"></div>
+      <!-- Acoustic Ripple Wave (Triggers when bell strikes) -->
+      <div id="bell-ripple-ring" class="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full border-2 border-terracotta-500/60 opacity-0 pointer-events-none"></div>
+
+      <!-- SVG Circular Progress Ring -->
+      <svg class="w-72 h-72 sm:w-88 sm:h-88 -rotate-90 transform" viewBox="0 0 280 280">
+        <circle cx="140" cy="140" r="126" stroke="currentColor" stroke-width="2" fill="none" class="text-paper-200 dark:text-night-800" />
+        <circle id="active-progress-ring" cx="140" cy="140" r="126" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" fill="none"
+          stroke-dasharray="791.68" stroke-dashoffset="0"
+          class="text-moss-700 dark:text-emerald-400 transition-all duration-500 ease-linear" />
+      </svg>
+
+      <!-- Center Readout -->
+      <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <span id="active-time-remaining" class="font-serif text-5xl sm:text-6xl font-light tracking-tight tabular-nums">30:00</span>
+        <span id="active-next-bell" class="text-xs text-ink-400 mt-2 font-mono">Next chime in 10:00</span>
+      </div>
+    </div>
+
+    <!-- Bottom Tactile Controls -->
+    <div class="flex items-center gap-4">
+      <button type="button" onclick="triggerManualChime()" class="px-5 py-3 rounded-full bg-paper-100 dark:bg-night-900 hover:bg-paper-200 text-xs font-medium text-ink-600 dark:text-paper-300 transition-colors" title="Strike bell now">
+        Chime Now
+      </button>
+
+      <button type="button" id="btn-pause-resume" onclick="togglePauseSession()" class="px-8 py-4 rounded-full bg-moss-700 hover:bg-moss-800 text-paper-50 font-medium text-sm shadow-lifted transition-all min-w-[140px]">
+        Pause
+      </button>
+
+      <button type="button" onclick="endSessionEarly()" class="px-5 py-3 rounded-full bg-paper-100 dark:bg-night-900 hover:bg-terracotta-500/15 hover:text-terracotta-500 text-xs font-medium text-ink-600 dark:text-paper-300 transition-colors">
+        Complete
+      </button>
+    </div>
+
+  </div>
+
+  <!-- =====================================================================
+       APPLICATION LOGIC & PSYCHOACOUSTIC ENGINE
+  ====================================================================== -->
+  <script>
+    // --- 1. Curated Acoustic Library ---
+    const SOUNDS = [
+      { id: 'soft-bell', name: 'Tibetan Singing Bowl', category: 'Bell', decay: '2.8s', desc: 'Warm bronze fundamental with gentle harmonic overtones.' },
+      { id: 'classic-bell', name: 'Kyoto Temple Bell', category: 'Bell', decay: '3.2s', desc: 'Deep resonant strike that anchors wandering attention.' },
+      { id: 'double-bell', name: 'Twin Mindfulness Chime', category: 'Bell', decay: '2.6s', desc: 'Two spaced strikes to gently invite posture awareness.' },
+      { id: 'soft-chime', name: 'Pentatonic Wind Chime', category: 'Harmonic', decay: '2.4s', desc: 'Three ascending intervals in a calming major pentatonic scale.' },
+      { id: 'gentle-piano', name: 'Felt Piano Triad', category: 'Harmonic', decay: '2.8s', desc: 'Muted felt hammer chord voiced softly in D major.' },
+      { id: 'minimal-pulse', name: 'Warm Woodblock', category: 'Minimal', decay: '0.6s', desc: 'Crisp organic percussion tap for subtle cadence.' }
+    ];
+
+    // --- 2. State Management ---
+    let state = {
+      selectedSound: localStorage.getItem('ib_selected_sound') || 'soft-bell',
+      volume: Number(localStorage.getItem('ib_volume')) || 80,
+      presets: JSON.parse(localStorage.getItem('ib_presets')) || [
+        { id: 'p1', name: 'Mindful Sitting', durationSec: 1800, intervalSec: 600, sound: 'classic-bell' },
+        { id: 'p2', name: 'Deep Writing Block', durationSec: 2700, intervalSec: 900, sound: 'soft-bell' },
+        { id: 'p3', name: 'Workday Posture Check', durationSec: 7200, intervalSec: 1800, sound: 'soft-chime' },
+        { id: 'p4', name: 'Focused Sprint', durationSec: 1500, intervalSec: 300, sound: 'gentle-piano' }
+      ],
+      history: JSON.parse(localStorage.getItem('ib_history')) || []
+    };
+
+    // Active Timer Runtime State
+    let timer = {
+      intervalId: null,
+      isRunning: false,
+      sessionName: '',
+      totalSec: 0,
+      remainingSec: 0,
+      cadenceSec: 0,
+      soundId: 'soft-bell',
+      bellsRung: 0,
+      totalBells: 0
+    };
+
+    let clearConfirmTimeout = null;
+
+    // --- 3. Psychoacoustic Sound Synthesis (Tone.js) ---
+    async function playAcousticSound(soundId) {
+      try {
+        if (typeof Tone === 'undefined') return;
+        await Tone.start();
+        const dbVolume = Tone.gainToDb(Math.max(0.05, state.volume / 100)) - 6;
+
+        if (soundId === 'soft-bell' || soundId === 'classic-bell') {
+          const synth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.02, decay: 2.6, sustain: 0.05, release: 1.8 }
+          }).toDestination();
+          synth.volume.value = dbVolume;
+          const base = soundId === 'soft-bell' ? ['D4', 'A4', 'F#5'] : ['C3', 'G3', 'E4'];
+          synth.triggerAttackRelease(base, '2n');
+        } 
+        else if (soundId === 'double-bell') {
+          const synth = new Tone.Synth({
+            oscillator: { type: 'triangle' },
+            envelope: { attack: 0.01, decay: 1.8, sustain: 0, release: 1.2 }
+          }).toDestination();
+          synth.volume.value = dbVolume;
+          const now = Tone.now();
+          synth.triggerAttackRelease('E5', '8n', now);
+          synth.triggerAttackRelease('B4', '4n', now + 0.55);
+        }
+        else if (soundId === 'soft-chime') {
+          const synth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.03, decay: 1.6, sustain: 0, release: 1.4 }
+          }).toDestination();
+          synth.volume.value = dbVolume;
+          const now = Tone.now();
+          synth.triggerAttackRelease('F#5', '8n', now);
+          synth.triggerAttackRelease('A5', '8n', now + 0.25);
+          synth.triggerAttackRelease('D6', '4n', now + 0.5);
+        }
+        else if (soundId === 'gentle-piano') {
+          const synth = new Tone.PolySynth(Tone.AMSynth, {
+            envelope: { attack: 0.05, decay: 2.0, sustain: 0.1, release: 1.5 }
+          }).toDestination();
+          synth.volume.value = dbVolume;
+          synth.triggerAttackRelease(['D4', 'F#4', 'A4', 'E5'], '2n');
+        }
+        else {
+          const membrane = new Tone.MembraneSynth({
+            pitchDecay: 0.02,
+            octaves: 2,
+            envelope: { attack: 0.005, decay: 0.25, sustain: 0 }
+          }).toDestination();
+          membrane.volume.value = dbVolume;
+          membrane.triggerAttackRelease('G4', '16n');
+        }
+
+        // Haptic feedback if enabled & supported
+        if (document.getElementById('setting-vibrate')?.checked && navigator.vibrate) {
+          navigator.vibrate([120, 80, 120]);
+        }
+      } catch (e) {
+        console.warn('Audio playback prevented until user gesture:', e);
+      }
+    }
+
+    // --- 4. Navigation & Theme ---
+    function switchTab(tabName) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+      const target = document.getElementById(`view-${tabName}`);
+      if (target) target.classList.remove('hidden');
+
+      // Update active pill styling
+      document.querySelectorAll('.nav-pill').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+          btn.classList.add('bg-paper-50', 'dark:bg-night-800', 'text-ink-900', 'dark:text-paper-50', 'shadow-soft');
+          btn.classList.remove('text-ink-600', 'dark:text-paper-400');
+        } else {
+          btn.classList.remove('bg-paper-50', 'dark:bg-night-800', 'text-ink-900', 'dark:text-paper-50', 'shadow-soft');
+          btn.classList.add('text-ink-600', 'dark:text-paper-400');
+        }
+      });
+
+      if (tabName === 'home') renderHome();
+      if (tabName === 'presets') renderPresets();
+      if (tabName === 'sounds') renderSounds('All');
+      if (tabName === 'history') renderHistory();
+      if (tabName === 'configure') updateConfigPreview();
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('ib_theme', isDark ? 'dark' : 'light');
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      document.getElementById('toast-msg').textContent = message;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2800);
+    }
+
+    // --- 5. Formatting Helpers ---
+    function formatTime(sec) {
+      const safeSec = Math.max(0, Math.floor(sec));
+      const h = Math.floor(safeSec / 3600);
+      const m = Math.floor((safeSec % 3600) / 60);
+      const s = safeSec % 60;
+      if (h > 0) return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function formatHumanDuration(sec) {
+      const safeSec = Math.max(0, Math.floor(sec));
+      const h = Math.floor(safeSec / 3600);
+      const m = Math.floor((safeSec % 3600) / 60);
+      if (h > 0 && m > 0) return `${h}h ${m}m`;
+      if (h > 0) return `${h}h`;
+      if (m === 0 && safeSec > 0) return `<1m`;
+      return `${m}m`;
+    }
+
+    function getSoundName(id) {
+      return SOUNDS.find(s => s.id === id)?.name || 'Tibetan Singing Bowl';
+    }
+
+    // --- 6. Render Views ---
+    function renderHome() {
+      const hour = new Date().getHours();
+      const greetEl = document.getElementById('greeting-time');
+      if (hour < 12) greetEl.textContent = 'Morning Stillness';
+      else if (hour < 18) greetEl.textContent = 'Afternoon Practice';
+      else greetEl.textContent = 'Evening Sanctuary';
+
+      // Metrics
+      const todayStr = new Date().toDateString();
+      const todaySec = state.history
+        .filter(h => new Date(h.date).toDateString() === todayStr)
+        .reduce((acc, cur) => acc + cur.durationSec, 0);
+      const totalSec = state.history.reduce((acc, cur) => acc + cur.durationSec, 0);
+
+      document.getElementById('stat-today').textContent = formatHumanDuration(todaySec);
+      document.getElementById('stat-sessions').textContent = state.history.length;
+      document.getElementById('stat-total').textContent = formatHumanDuration(totalSec);
+
+      // Curated Rituals List
+      const listEl = document.getElementById('home-presets-list');
+      listEl.innerHTML = state.presets.slice(0, 4).map(preset => `
+        <div class="group bg-paper-100/75 dark:bg-night-900/90 hover:bg-paper-100 dark:hover:bg-night-800/90 rounded-2xl p-4 sm:p-5 border border-paper-200/60 dark:border-night-800 shadow-soft transition-all flex items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h3 class="font-medium text-base text-ink-900 dark:text-paper-50">${preset.name}</h3>
+            <p class="text-xs text-ink-400">
+              ${formatHumanDuration(preset.durationSec)} total &middot; Chime every ${formatHumanDuration(preset.intervalSec)} &middot; ${getSoundName(preset.sound)}
+            </p>
+          </div>
+          <button type="button" onclick="startPresetSession('${preset.id}')" class="shrink-0 w-10 h-10 rounded-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-700 group-hover:bg-moss-700 group-hover:text-paper-50 group-hover:border-moss-700 flex items-center justify-center transition-all shadow-soft" title="Begin ${preset.name}">
+            <svg class="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </button>
+        </div>
+      `).join('');
+
+      // Recent Reflections List
+      const recentEl = document.getElementById('home-recent-list');
+      if (state.history.length === 0) {
+        recentEl.classList.add('justify-center');
+        recentEl.innerHTML = `
+          <div class="text-center space-y-2 py-4">
+            <p class="font-serif text-lg text-ink-600 dark:text-paper-300">No sittings recorded yet</p>
+            <p class="text-xs text-ink-400 max-w-xs mx-auto leading-relaxed">
+              Completed sessions are stored quietly on your device with duration and acoustic chime counts.
+            </p>
+          </div>
+        `;
+      } else {
+        recentEl.classList.remove('justify-center');
+        recentEl.innerHTML = `<div class="space-y-3">` + state.history.slice(0, 4).map(item => `
+          <div class="flex items-center justify-between py-2 border-b border-paper-200/60 dark:border-night-800 last:border-none">
+            <div>
+              <p class="text-sm font-medium">${item.name}</p>
+              <p class="text-[11px] text-ink-400">${new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} &middot; ${item.bells} chimes</p>
+            </div>
+            <span class="font-mono text-xs bg-moss-100 dark:bg-moss-800/40 text-moss-700 dark:text-emerald-400 px-2.5 py-1 rounded-full">${formatHumanDuration(item.durationSec)}</span>
+          </div>
+        `).join('') + `</div>`;
+      }
+    }
+
+    function renderPresets() {
+      const grid = document.getElementById('presets-grid');
+      if (state.presets.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full bg-paper-100/70 dark:bg-night-900 rounded-3xl p-10 text-center space-y-3">
+            <p class="font-serif text-xl">No saved rituals yet</p>
+            <p class="text-xs text-ink-400">Create a custom cadence in New Session and save it here for instant access.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = state.presets.map(p => `
+        <div class="bg-paper-100/80 dark:bg-night-900 rounded-3xl p-6 border border-paper-200/70 dark:border-night-800 shadow-soft flex flex-col justify-between gap-6">
+          <div class="space-y-2">
+            <div class="flex items-start justify-between gap-4">
+              <h3 class="font-serif text-2xl font-normal">${p.name}</h3>
+              <span class="font-mono text-xs bg-paper-50 dark:bg-night-800 px-3 py-1 rounded-full text-ink-600 dark:text-paper-300 border border-paper-200/70 dark:border-night-700">
+                ${formatHumanDuration(p.durationSec)}
+              </span>
+            </div>
+            <p class="text-xs text-ink-400">
+              Chime every <span class="text-ink-900 dark:text-paper-200 font-medium">${formatHumanDuration(p.intervalSec)}</span> &middot; ${getSoundName(p.sound)}
+            </p>
+          </div>
+
+          <div class="flex items-center justify-between pt-3 border-t border-paper-200/60 dark:border-night-800">
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="startPresetSession('${p.id}')" class="bg-moss-700 hover:bg-moss-800 text-paper-50 px-5 py-2 rounded-full text-xs font-medium flex items-center gap-2 transition-colors">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span>Start</span>
+              </button>
+              <button type="button" onclick="editPreset('${p.id}')" class="px-4 py-2 rounded-full bg-paper-50 dark:bg-night-800 border border-paper-200 dark:border-night-700 text-xs font-medium hover:bg-paper-200/60 transition-colors">
+                Adjust
+              </button>
+            </div>
+            <button type="button" onclick="deletePreset('${p.id}')" class="p-2 rounded-full text-ink-400 hover:text-terracotta-500 hover:bg-terracotta-500/10 transition-colors" title="Remove ritual">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderSounds(category) {
+      document.querySelectorAll('.sound-cat-btn').forEach(btn => {
+        if (btn.dataset.cat === category) {
+          btn.classList.add('bg-ink-900', 'text-paper-50', 'dark:bg-paper-100', 'dark:text-ink-900');
+          btn.classList.remove('bg-paper-100', 'dark:bg-night-900', 'text-ink-600', 'dark:text-paper-300');
+        } else {
+          btn.classList.remove('bg-ink-900', 'text-paper-50', 'dark:bg-paper-100', 'dark:text-ink-900');
+          btn.classList.add('bg-paper-100', 'dark:bg-night-900', 'text-ink-600', 'dark:text-paper-300');
+        }
+      });
+
+      const filtered = category === 'All' ? SOUNDS : SOUNDS.filter(s => s.category === category);
+      const grid = document.getElementById('sounds-grid');
+
+      grid.innerHTML = filtered.map(sound => {
+        const isSelected = state.selectedSound === sound.id;
+        return `
+          <div onclick="selectSound('${sound.id}')" class="cursor-pointer rounded-3xl p-5 sm:p-6 border transition-all flex items-center justify-between gap-4 ${isSelected ? 'bg-moss-100/60 dark:bg-moss-800/30 border-moss-700/60 shadow-soft' : 'bg-paper-100/75 dark:bg-night-900 border-paper-200/70 dark:border-night-800 hover:bg-paper-100'}">
+            <div class="flex items-start gap-3.5">
+              <div class="mt-1 w-5 h-5 rounded-full flex items-center justify-center border ${isSelected ? 'bg-moss-700 border-moss-700 text-white' : 'border-ink-400/50'}">
+                ${isSelected ? '<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <h3 class="font-medium text-sm sm:text-base">${sound.name}</h3>
+                  <span class="text-[11px] font-mono text-ink-400">${sound.category} &middot; ${sound.decay}</span>
+                </div>
+                <p class="text-xs text-ink-600 dark:text-paper-300 leading-relaxed">${sound.desc}</p>
+              </div>
+            </div>
+
+            <button type="button" onclick="previewSound(event, '${sound.id}')" class="shrink-0 px-4 py-2 rounded-full bg-paper-50 dark:bg-night-950 border border-paper-200 dark:border-night-700 hover:border-moss-700 text-xs font-medium flex items-center gap-1.5 transition-colors">
+              <svg class="w-3.5 h-3.5 text-moss-700 dark:text-emerald-400" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              <span>Listen</span>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderHistory() {
+      const barsEl = document.getElementById('weekly-bars');
+      const days = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dayStr = d.toDateString();
+        const mins = Math.round(
+          state.history
+            .filter(item => new Date(item.date).toDateString() === dayStr)
+            .reduce((acc, cur) => acc + cur.durationSec, 0) / 60
+        );
+        days.push({
+          label: d.toLocaleDateString(undefined, { weekday: 'short' }),
+          mins
+        });
+      }
+
+      const maxMins = Math.max(30, ...days.map(d => d.mins));
+      barsEl.innerHTML = days.map(d => {
+        const heightPct = d.mins > 0 ? Math.max(12, Math.round((d.mins / maxMins) * 100)) : 4;
+        return `
+          <div class="flex flex-col items-center gap-2 h-full justify-end">
+            <span class="font-mono text-[11px] text-ink-400 tabular-nums">${d.mins > 0 ? d.mins + 'm' : '0'}</span>
+            <div class="w-full max-w-[36px] rounded-t-xl transition-all duration-500 ${d.mins > 0 ? 'bg-moss-700 dark:bg-emerald-500' : 'bg-paper-200 dark:bg-night-800'}" style="height: ${heightPct}%"></div>
+            <span class="text-xs text-ink-600 dark:text-paper-300 font-medium">${d.label}</span>
+          </div>
+        `;
+      }).join('');
+
+      const logContainer = document.getElementById('history-log-container');
+      if (state.history.length === 0) {
+        logContainer.innerHTML = `
+          <div class="bg-paper-100/70 dark:bg-night-900 rounded-3xl p-10 text-center space-y-4 border border-paper-200/60 dark:border-night-800">
+            <p class="font-serif text-xl">Your journal awaits its first entry</p>
+            <p class="text-xs text-ink-400 max-w-md mx-auto">Once you complete a session, its duration, cadence, and chime count will appear here.</p>
+            <button type="button" onclick="switchTab('configure')" class="bg-moss-700 hover:bg-moss-800 text-paper-50 px-6 py-2.5 rounded-full text-xs font-medium transition-colors">
+              Begin First Sitting
+            </button>
+          </div>
+        `;
+      } else {
+        logContainer.innerHTML = state.history.map(item => `
+          <div class="bg-paper-100/80 dark:bg-night-900 rounded-2xl p-4 sm:p-5 border border-paper-200/60 dark:border-night-800 flex items-center justify-between gap-4">
+            <div class="space-y-1">
+              <h3 class="font-medium text-sm sm:text-base">${item.name}</h3>
+              <p class="text-xs text-ink-400">
+                ${new Date(item.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })} &middot; ${item.bells} interval chimes
+              </p>
+            </div>
+            <span class="font-mono text-xs bg-moss-100 dark:bg-moss-800/40 text-moss-700 dark:text-emerald-400 px-3 py-1.5 rounded-full font-medium">
+              ${formatHumanDuration(item.durationSec)}
+            </span>
+          </div>
+        `).join('');
+      }
+    }
+
+    // --- 7. Configure Session Logic ---
+    function populateSoundDropdown() {
+      const select = document.getElementById('config-sound-select');
+      if (!select) return;
+      select.innerHTML = SOUNDS.map(s => `
+        <option value="${s.id}" ${s.id === state.selectedSound ? 'selected' : ''}>${s.name} (${s.category})</option>
+      `).join('');
+    }
+
+    function setDurationPreset(mins) {
+      document.getElementById('dur-h').value = Math.floor(mins / 60);
+      document.getElementById('dur-m').value = mins % 60;
+      document.getElementById('dur-s').value = 0;
+
+      document.querySelectorAll('.dur-chip').forEach(btn => {
+        if (Number(btn.dataset.mins) === mins) {
+          btn.classList.add('bg-moss-700', 'text-white', 'shadow-soft');
+          btn.classList.remove('bg-paper-50', 'dark:bg-night-800');
+        } else {
+          btn.classList.remove('bg-moss-700', 'text-white', 'shadow-soft');
+          btn.classList.add('bg-paper-50', 'dark:bg-night-800');
+        }
+      });
+      updateConfigPreview();
+    }
+
+    function setIntervalPreset(mins) {
+      document.getElementById('int-h').value = Math.floor(mins / 60);
+      document.getElementById('int-m').value = mins % 60;
+      document.getElementById('int-s').value = 0;
+
+      document.querySelectorAll('.int-chip').forEach(btn => {
+        if (Number(btn.dataset.mins) === mins) {
+          btn.classList.add('bg-moss-700', 'text-white', 'shadow-soft');
+          btn.classList.remove('bg-paper-50', 'dark:bg-night-800');
+        } else {
+          btn.classList.remove('bg-moss-700', 'text-white', 'shadow-soft');
+          btn.classList.add('bg-paper-50', 'dark:bg-night-800');
+        }
+      });
+      updateConfigPreview();
+    }
+
+    function getConfiguredValues() {
+      const durH = Math.max(0, parseInt(document.getElementById('dur-h').value, 10) || 0);
+      const durM = Math.max(0, parseInt(document.getElementById('dur-m').value, 10) || 0);
+      const durS = Math.max(0, parseInt(document.getElementById('dur-s').value, 10) || 0);
+      const totalSec = Math.max(10, durH * 3600 + durM * 60 + durS);
+
+      const intH = Math.max(0, parseInt(document.getElementById('int-h').value, 10) || 0);
+      const intM = Math.max(0, parseInt(document.getElementById('int-m').value, 10) || 0);
+      const intS = Math.max(0, parseInt(document.getElementById('int-s').value, 10) || 0);
+      const cadenceSec = Math.max(5, intH * 3600 + intM * 60 + intS);
+
+      const name = document.getElementById('session-name').value.trim() || 'Mindful Sitting';
+      const soundId = document.getElementById('config-sound-select').value || state.selectedSound;
+
+      return { name, totalSec, cadenceSec, soundId };
+    }
+
+    function updateConfigPreview() {
+      const { totalSec, cadenceSec } = getConfiguredValues();
+
+      document.getElementById('display-total-duration').textContent = formatTime(totalSec);
+      document.getElementById('display-interval-duration').textContent = `Every ${formatTime(cadenceSec)}`;
+
+      const reminderCount = Math.max(0, Math.floor((totalSec - 1) / cadenceSec));
+      document.getElementById('preview-summary-text').textContent =
+        reminderCount === 1
+          ? '1 gentle reminder before completion'
+          : `${reminderCount} gentle reminders before completion`;
+
+      const nodesEl = document.getElementById('rhythm-timeline-nodes');
+      let html = '';
+      const maxVisible = 12;
+      for (let i = 1; i <= Math.min(reminderCount, maxVisible); i++) {
+        html += `
+          <div class="flex items-center justify-between py-2 px-3.5 rounded-2xl bg-paper-50/80 dark:bg-night-950/70 border border-paper-200/60 dark:border-night-800 text-xs">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2 h-2 rounded-full bg-terracotta-500"></span>
+              <span class="text-ink-600 dark:text-paper-300">Chime ${i}</span>
+            </div>
+            <span class="font-mono text-ink-900 dark:text-paper-100 tabular-nums">${formatTime(i * cadenceSec)}</span>
+          </div>
+        `;
+      }
+      if (reminderCount > maxVisible) {
+        html += `<p class="text-[11px] text-center text-ink-400 py-1">+ ${reminderCount - maxVisible} more interval chimes</p>`;
+      }
+
+      html += `
+        <div class="flex items-center justify-between py-2.5 px-3.5 rounded-2xl bg-moss-100/70 dark:bg-moss-800/30 border border-moss-700/20 text-xs font-medium">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2 h-2 rounded-full bg-moss-700 dark:bg-emerald-400"></span>
+            <span class="text-moss-800 dark:text-emerald-300">Session Complete</span>
+          </div>
+          <span class="font-mono text-moss-800 dark:text-emerald-300 tabular-nums">${formatTime(totalSec)}</span>
+        </div>
+      `;
+      nodesEl.innerHTML = html;
+    }
+
+    function playSelectedConfigSound() {
+      const soundId = document.getElementById('config-sound-select').value;
+      playAcousticSound(soundId);
+    }
+
+    function startConfiguredSession() {
+      const { name, totalSec, cadenceSec, soundId } = getConfiguredValues();
+      beginSanctuarySession(name, totalSec, cadenceSec, soundId);
+    }
+
+    function saveCurrentAsPreset() {
+      const { name, totalSec, cadenceSec, soundId } = getConfiguredValues();
+      const newPreset = {
+        id: 'p_' + Date.now(),
+        name,
+        durationSec: totalSec,
+        intervalSec: cadenceSec,
+        sound: soundId
+      };
+      state.presets.unshift(newPreset);
+      localStorage.setItem('ib_presets', JSON.stringify(state.presets));
+      showToast(`Saved "${name}" to Rituals`);
+    }
+
+    // --- 8. Presets & Sounds Interactions ---
+    function startPresetSession(presetId) {
+      const preset = state.presets.find(p => p.id === presetId);
+      if (!preset) return;
+      beginSanctuarySession(preset.name, preset.durationSec, preset.intervalSec, preset.sound);
+    }
+
+    function editPreset(presetId) {
+      const preset = state.presets.find(p => p.id === presetId);
+      if (!preset) return;
+
+      document.getElementById('session-name').value = preset.name;
+      document.getElementById('dur-h').value = Math.floor(preset.durationSec / 3600);
+      document.getElementById('dur-m').value = Math.floor((preset.durationSec % 3600) / 60);
+      document.getElementById('dur-s').value = preset.durationSec % 60;
+
+      document.getElementById('int-h').value = Math.floor(preset.intervalSec / 3600);
+      document.getElementById('int-m').value = Math.floor((preset.intervalSec % 3600) / 60);
+      document.getElementById('int-s').value = preset.intervalSec % 60;
+
+      document.getElementById('config-sound-select').value = preset.sound;
+      switchTab('configure');
+    }
+
+    function deletePreset(presetId) {
+      state.presets = state.presets.filter(p => p.id !== presetId);
+      localStorage.setItem('ib_presets', JSON.stringify(state.presets));
+      renderPresets();
+      showToast('Ritual removed');
+    }
+
+    function selectSound(soundId) {
+      state.selectedSound = soundId;
+      localStorage.setItem('ib_selected_sound', soundId);
+      populateSoundDropdown();
+      const activeCatBtn = document.querySelector('.sound-cat-btn.bg-ink-900');
+      renderSounds(activeCatBtn ? activeCatBtn.dataset.cat : 'All');
+      playAcousticSound(soundId);
+    }
+
+    function previewSound(event, soundId) {
+      event.stopPropagation();
+      playAcousticSound(soundId);
+    }
+
+    function filterSounds(category) {
+      renderSounds(category);
+    }
+
+    function updateVolume(val) {
+      state.volume = Number(val);
+      localStorage.setItem('ib_volume', state.volume);
+      document.getElementById('global-volume-label').textContent = `${state.volume}%`;
+    }
+
+    function clearHistoryData() {
+      const btn = document.getElementById('btn-clear-history');
+      if (btn.dataset.confirming !== 'true') {
+        btn.dataset.confirming = 'true';
+        btn.textContent = 'Click again to confirm reset';
+        clearConfirmTimeout = setTimeout(() => {
+          btn.dataset.confirming = 'false';
+          btn.textContent = 'Clear Practice Journal';
+        }, 3500);
+        return;
+      }
+
+      clearTimeout(clearConfirmTimeout);
+      btn.dataset.confirming = 'false';
+      btn.textContent = 'Clear Practice Journal';
+      state.history = [];
+      localStorage.setItem('ib_history', JSON.stringify(state.history));
+      renderHome();
+      showToast('Practice journal cleared');
+    }
+
+    // --- 9. Active Focus Sanctuary Timer ---
+    function triggerBellVisualAndAudio(soundId) {
+      playAcousticSound(soundId);
+      const ripple = document.getElementById('bell-ripple-ring');
+      ripple.classList.remove('ripple-active');
+      void ripple.offsetWidth; // Force reflow to restart animation
+      ripple.classList.add('ripple-active');
+    }
+
+    function updateActiveTimerUI() {
+      document.getElementById('active-time-remaining').textContent = formatTime(timer.remainingSec);
+      document.getElementById('active-bell-counter').textContent = `Bell ${timer.bellsRung} of ${timer.totalBells}`;
+
+      const elapsed = timer.totalSec - timer.remainingSec;
+      const intoCurrentInterval = elapsed % timer.cadenceSec;
+      const untilNext = timer.remainingSec <= timer.cadenceSec && timer.bellsRung >= timer.totalBells
+        ? timer.remainingSec
+        : timer.cadenceSec - intoCurrentInterval;
+
+      document.getElementById('active-next-bell').textContent =
+        timer.bellsRung >= timer.totalBells
+          ? `Completion chime in ${formatTime(timer.remainingSec)}`
+          : `Next chime in ${formatTime(untilNext)}`;
+
+      // Update SVG Ring Progress (Circumference = 2 * PI * 126 ≈ 791.68)
+      const circumference = 791.68;
+      const progressRatio = timer.totalSec > 0 ? (timer.totalSec - timer.remainingSec) / timer.totalSec : 0;
+      const offset = circumference * (1 - progressRatio);
+      document.getElementById('active-progress-ring').style.strokeDashoffset = offset;
+    }
+
+    function beginSanctuarySession(name, totalSec, cadenceSec, soundId) {
+      if (timer.intervalId) clearInterval(timer.intervalId);
+
+      timer = {
+        intervalId: null,
+        isRunning: true,
+        sessionName: name,
+        totalSec,
+        remainingSec: totalSec,
+        cadenceSec,
+        soundId,
+        bellsRung: 0,
+        totalBells: Math.max(0, Math.floor((totalSec - 1) / cadenceSec))
+      };
+
+      document.getElementById('active-session-title').textContent = name;
+      document.getElementById('btn-pause-resume').textContent = 'Pause';
+
+      const sanctuary = document.getElementById('active-sanctuary');
+      sanctuary.classList.remove('hidden');
+      sanctuary.classList.add('flex');
+
+      updateActiveTimerUI();
+      triggerBellVisualAndAudio(soundId);
+
+      timer.intervalId = setInterval(() => {
+        if (!timer.isRunning) return;
+
+        timer.remainingSec -= 1;
+        const elapsed = timer.totalSec - timer.remainingSec;
+
+        if (timer.remainingSec <= 0) {
+          timer.remainingSec = 0;
+          updateActiveTimerUI();
+          triggerBellVisualAndAudio(timer.soundId);
+          finishSanctuarySession(true);
+          return;
+        }
+
+        if (elapsed > 0 && elapsed % timer.cadenceSec === 0) {
+          timer.bellsRung += 1;
+          triggerBellVisualAndAudio(timer.soundId);
+        }
+
+        updateActiveTimerUI();
+      }, 1000);
+    }
+
+    function triggerManualChime() {
+      triggerBellVisualAndAudio(timer.soundId);
+    }
+
+    function togglePauseSession() {
+      timer.isRunning = !timer.isRunning;
+      document.getElementById('btn-pause-resume').textContent = timer.isRunning ? 'Pause' : 'Resume';
+    }
+
+    function endSessionEarly() {
+      finishSanctuarySession(false);
+    }
+
+    function finishSanctuarySession(naturalCompletion) {
+      if (timer.intervalId) {
+        clearInterval(timer.intervalId);
+        timer.intervalId = null;
+      }
+
+      const actualDuration = timer.totalSec - timer.remainingSec;
+      if (actualDuration >= 10) {
+        state.history.unshift({
+          name: timer.sessionName,
+          durationSec: actualDuration,
+          bells: timer.bellsRung,
+          date: new Date().toISOString()
+        });
+        localStorage.setItem('ib_history', JSON.stringify(state.history));
+      }
+
+      const sanctuary = document.getElementById('active-sanctuary');
+      sanctuary.classList.add('hidden');
+      sanctuary.classList.remove('flex');
+
+      renderHome();
+      showToast(naturalCompletion ? 'Sitting complete. Well done.' : 'Session recorded in journal.');
+    }
+
+    // --- 10. Initialize App ---
+    window.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('ib_theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+
+      const volSlider = document.getElementById('global-volume-slider');
+      const volLabel = document.getElementById('global-volume-label');
+      if (volSlider) volSlider.value = state.volume;
+      if (volLabel) volLabel.textContent = `${state.volume}%`;
+
+      populateSoundDropdown();
+      switchTab('home');
+    });
+  </script>
+</body>
+</html>
