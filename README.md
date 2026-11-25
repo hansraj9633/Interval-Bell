@@ -1,3 +1,4 @@
+<img width="2400" height="1792" alt="Interval Bell Card" src="https://github.com/user-attachments/assets/cc867b5f-3307-40c3-b9a5-f6a24242f42b" />
 # Interval Bell — Pause. Refocus. Continue.
 
 Interval Bell is an offline-first, nature-inspired interval reminder and focus application built with React, TypeScript, Tailwind CSS, Zustand, Zod, IndexedDB, Web Audio API, and Progressive Web App (PWA) caching.
