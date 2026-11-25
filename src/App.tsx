@@ -1,3 +1,11 @@
 import App from './app/App';
+import { Analytics } from '@vercel/analytics/react';
 
-export default App;
+export default function RootApp() {
+  return (
+    <>
+      <App />
+      <Analytics />
+    </>
+  );
+}
