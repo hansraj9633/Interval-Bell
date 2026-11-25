@@ -1,9 +1,11 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {getRemainingMs} from '../../engines/session-engine/SessionEngine';
+import {usePWAInstall} from '../../hooks/usePWAInstall';
 import {useIntervalBellStore} from '../../store/useIntervalBellStore';
 import {AppRoute} from '../../types';
 import {formatDurationHMS} from '../../utils/time';
-import {OfflineNoticeBanner} from '../common/PWAInstallButton';
+import {InstallGuideModal, OfflineNoticeBanner} from '../common/PWAInstallButton';
+import {useToast} from '../common/ToastBanner';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -72,9 +74,12 @@ export const AppShell: React.FC<AppShellProps> = ({children}) => {
   const setRoute = useIntervalBellStore((s) => s.setRoute);
   const activeSession = useIntervalBellStore((s) => s.activeSession);
   const lastCompletedRecord = useIntervalBellStore((s) => s.lastCompletedRecord);
+  const {isInstallable, isInstalled, isIOS, isAndroid, install} = usePWAInstall();
+  const {showToast} = useToast();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [dragTranslateX, setDragTranslateX] = useState<number | null>(null);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
 
   const gestureRef = useRef<{
     active: boolean;
@@ -411,7 +416,7 @@ export const AppShell: React.FC<AppShellProps> = ({children}) => {
             width: `${DRAWER_WIDTH}px`,
             transform: `translate3d(${computedTranslateX}px, 0, 0)`,
           }}
-          className={`fixed top-0 bottom-0 left-0 max-w-[82vw] bg-paper-50 dark:bg-night-950 border-r border-paper-200/80 dark:border-night-800 shadow-lifted flex flex-col justify-between p-6 ${
+          className={`fixed top-0 bottom-0 left-0 max-w-[82vw] bg-paper-50 dark:bg-night-950 border-r border-paper-200/80 dark:border-night-800 shadow-lifted flex flex-col justify-between gap-6 p-6 overflow-y-auto ${
             isDragging ? '' : 'transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]'
           }`}
         >
@@ -544,6 +549,45 @@ export const AppShell: React.FC<AppShellProps> = ({children}) => {
                   </div>
                 );
               })}
+
+              {!isInstalled && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isInstallable) {
+                      void install().then((accepted) => {
+                        if (accepted) {
+                          setDrawerOpen(false);
+                          setDragTranslateX(null);
+                          showToast('Interval Bell installed');
+                        }
+                      });
+                    } else {
+                      setDrawerOpen(false);
+                      setDragTranslateX(null);
+                      setShowInstallGuide(true);
+                    }
+                  }}
+                  className="w-full px-4 py-3 rounded-2xl text-sm font-medium flex items-center justify-between text-moss-700 dark:text-emerald-400 hover:bg-moss-100/60 dark:hover:bg-moss-800/30 transition-all"
+                >
+                  <span className="flex items-center gap-3">
+                    <svg
+                      className="w-4 h-4 shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" x2="12" y1="15" y2="3" />
+                    </svg>
+                    <span>Download App</span>
+                  </span>
+                </button>
+              )}
             </nav>
           </div>
 
@@ -553,6 +597,22 @@ export const AppShell: React.FC<AppShellProps> = ({children}) => {
           </div>
         </aside>
       </div>
+
+      <InstallGuideModal
+        open={showInstallGuide}
+        onClose={() => setShowInstallGuide(false)}
+        isIOS={isIOS}
+        isAndroid={isAndroid}
+        isInstallable={isInstallable}
+        onDirectInstall={() => {
+          void install().then((accepted) => {
+            if (accepted) {
+              setShowInstallGuide(false);
+              showToast('Interval Bell installed');
+            }
+          });
+        }}
+      />
 
       <OfflineNoticeBanner />
 
