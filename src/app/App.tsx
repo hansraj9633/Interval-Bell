@@ -1,3 +1,4 @@
+import {Analytics} from '@vercel/analytics/react';
 import React, {useEffect, useRef} from 'react';
 import {ReminderAlertModal} from '../components/alerts/ReminderAlertModal';
 import {ToastProvider, useToast} from '../components/common/ToastBanner';
@@ -83,6 +84,7 @@ const AppContent: React.FC = () => {
 export const App: React.FC = () => (
   <ToastProvider>
     <AppContent />
+    <Analytics />
   </ToastProvider>
 );
 
